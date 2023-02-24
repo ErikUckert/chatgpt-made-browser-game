@@ -1,0 +1,349 @@
+<html>
+  <head>
+    <title>RPG</title>
+  </head>
+  <body>
+    <canvas id="game" width="600" height="600" style="color: aqua"></canvas>
+    <script>
+      // JavaScript code goes here
+      // Set up the canvas and context
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+
+      // Load the background image
+      const backgroundImage = new Image();
+      backgroundImage.src = "bg.png";
+
+      backgroundImage.onload = function () {
+        // Set the canvas size to the size of the background image
+        canvas.width = backgroundImage.width;
+        canvas.height = backgroundImage.height;
+
+        // Update the canvas element's CSS style to match the new size
+        canvas.style.width = backgroundImage.width + "px";
+        canvas.style.height = backgroundImage.height + "px";
+      };
+
+      // Set up the player character
+      const playerSprite = new Image();
+      playerSprite.src = "hero.png";
+
+      const player = {
+        x: 0,
+        y: 0,
+        size: 50,
+        speed: 5,
+      };
+
+      // Set up the region for treasure spawning
+      const region = {
+        x: canvas.width / 2, // x-coordinate of the center of the ellipse
+        y: canvas.height / 2, // y-coordinate of the center of the ellipse
+        a: canvas.width / 3, // horizontal radius of the ellipse
+        b: canvas.height / 3, // vertical radius of the ellipse
+      };
+
+      // Check if the player is inside the region
+      function isInsideRegion(x, y) {
+        console.log(region.x, region.y);
+        // Check if the coordinates are inside the ellipse
+        return (
+          (x - region.x) ** 2 / region.a ** 2 +
+            (y - region.y) ** 2 / region.b ** 2 <=
+          1
+        );
+      }
+
+      // Update the player position
+      function updatePlayer() {
+        // Update the player position based on the controls
+        if (controls.left) {
+          player.x -= player.speed;
+        }
+        if (controls.right) {
+          player.x += player.speed;
+        }
+        if (controls.up) {
+          player.y -= player.speed;
+        }
+        if (controls.down) {
+          player.y += player.speed;
+        }
+
+        // Check if the player is outside the region
+        if (!isInsideRegion(player.x, player.y)) {
+          // If the player is outside the region, move the player back inside the region
+          if (player.x < region.x - region.a) {
+            player.x = region.x - region.a;
+          } else if (player.x > region.x + region.a) {
+            player.x = region.x + region.a;
+          }
+          if (player.y < region.y - region.b) {
+            player.y = region.y - region.b;
+          } else if (player.y > region.y + region.b) {
+            player.y = region.y + region.b;
+          }
+        }
+      }
+
+      // Set up the treasure
+      const treasureSprite = new Image();
+      treasureSprite.src = "treasure.png";
+
+      const treasure = {
+        x: Math.floor(Math.random() * canvas.width),
+        y: Math.floor(Math.random() * canvas.height),
+        size: 50,
+      };
+
+      // Generate a random position for the treasure within the region
+      function generateTreasurePosition() {
+        // Generate random x and y coordinates within the canvas
+        let x = Math.floor(Math.random() * canvas.width);
+        let y = Math.floor(Math.random() * canvas.height);
+
+        // Check if the coordinates are inside the ellipse
+        let inside =
+          (x - region.x) ** 2 / region.a ** 2 +
+            (y - region.y) ** 2 / region.b ** 2 <=
+          1;
+        if (inside) {
+          // If the coordinates are inside the ellipse, set the treasure position to the coordinates
+          treasure.x = x;
+          treasure.y = y;
+        } else {
+          // If the coordinates are not inside the ellipse, try again with new coordinates
+          generateTreasurePosition();
+        }
+      }
+
+      // Set up the enemies
+      const enemySprite = new Image();
+      enemySprite.src = "enemy.png";
+      const enemies = [
+        {
+          x: 600,
+          y: 600,
+          size: 50,
+          speed: 1,
+          color: "red",
+        },
+        {
+          x: 500,
+          y: 500,
+          size: 50,
+          speed: 1,
+          color: "red",
+        },
+      ];
+
+      // Set up the controls
+      const controls = {
+        left: false,
+        up: false,
+        right: false,
+        down: false,
+      };
+
+      // Set up score
+      var score = 0;
+
+      // Set up game over function
+      function gameOver() {
+        // End the game
+        alert("Game Over! Your score: " + score);
+
+        // Ask the player if they want to play again
+        if (confirm("Play again?")) {
+          // Reset the player position
+          player.x = 0;
+          player.y = 0;
+
+          // Reset the treasure position
+          // Generate the initial treasure position
+          generateTreasurePosition();
+
+          // Reset the enemy positions
+          enemies.forEach(function (enemy) {
+            enemy.x = Math.floor(Math.random() * canvas.width);
+            enemy.y = Math.floor(Math.random() * canvas.height);
+            enemy.color = "red";
+          });
+
+          // Reset the score
+          score = 0;
+
+          // Reset the controlls
+          controls.left = false;
+          controls.right = false;
+          controls.up = false;
+          controls.down = false;
+        } else {
+          // End the game loop
+          return;
+        }
+      }
+
+      // Set up game loop
+      function loop() {
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height, canvas.style);
+        // Draw the background image
+        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+
+        // Set up the region for treasure spawning
+        region.x = canvas.width / 2; // x-coordinate of the center of the ellipse
+        region.y = canvas.height / 2; // y-coordinate of the center of the ellipse
+        region.a = canvas.width / 3; // horizontal radius of the ellipse
+        region.b = canvas.height / 3; // vertical radius of the ellipse
+
+        generateTreasurePosition();
+
+        // Check for collision with treasure
+        if (
+          Math.abs(player.x - treasure.x) < 40 &&
+          Math.abs(player.y - treasure.y) < 40
+        ) {
+          // Increment score and move treasure to a new location
+          score++;
+          generateTreasurePosition();
+        }
+
+        // Update the player position
+        updatePlayer();
+        // Draw the player
+        ctx.drawImage(playerSprite, player.x, player.y, 50, 50);
+
+        // Draw the treasure
+        ctx.drawImage(treasureSprite, treasure.x, treasure.y, 50, 50);
+
+        // Draw the enemies
+        enemies.forEach(function (enemy) {
+          ctx.drawImage(enemySprite, enemy.x, enemy.y, 50, 50);
+
+          // Check for collision with player
+          if (
+            player.x < enemy.x + enemy.size / 2 &&
+            player.x + player.size / 2 > enemy.x &&
+            player.y < enemy.y + enemy.size / 2 &&
+            player.y + player.size / 2 > enemy.y
+          ) {
+            gameOver();
+          }
+        });
+
+        // // Update the player position based on controls
+        // if (controls.left) {
+        //   player.x -= player.speed;
+        // }
+        // if (controls.up) {
+        //   player.y -= player.speed;
+        // }
+        // if (controls.right) {
+        //   player.x += player.speed;
+        // }
+        // if (controls.down) {
+        //   player.y += player.speed;
+        // }
+
+        // // Keep the player within the boundaries of the canvas
+        // if (player.x < 0) {
+        //   player.x = 0;
+        // }
+        // if (player.y < 0) {
+        //   player.y = 0;
+        // }
+        // if (player.x + player.size > canvas.width) {
+        //   player.x = canvas.width - player.size;
+        // }
+        // if (player.y + player.size > canvas.height) {
+        //   player.y = canvas.height - player.size;
+        // }
+
+        // // Check if the player is outside the region
+        // if (!isInsideRegion(player.x, player.y)) {
+        //   // If the player is outside the region, move the player back inside the region
+        //   let angle = Math.atan2(player.y - region.y, player.x - region.x);
+        //   player.x = region.x + region.a * Math.cos(angle);
+        //   player.y = region.y + region.b * Math.sin(angle);
+        // }
+
+        // Keep the treasure within the boundaries of the canvas
+        if (treasure.x < 0) {
+          treasure.x = 0;
+        }
+        if (treasure.y < 0) {
+          treasure.y = 0;
+        }
+        if (treasure.x + treasure.size > canvas.width) {
+          treasure.x = canvas.width - treasure.size;
+        }
+        if (treasure.y + treasure.size > canvas.height) {
+          treasure.y = canvas.height - treasure.size;
+        }
+
+        // Update the enemies
+        enemies.forEach(function (enemy) {
+          // Calculate the distance between the enemy and the player
+          const dx = player.x - enemy.x;
+          const dy = player.y - enemy.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          // Normalize the vector (dx, dy)
+          const normalizedDx = dx / distance;
+          const normalizedDy = dy / distance;
+
+          // Move the enemy towards the player
+          enemy.x += normalizedDx * enemy.speed;
+          enemy.y += normalizedDy * enemy.speed;
+        });
+
+        // Draw the score
+        ctx.font = "24px sans-serif";
+        ctx.fillStyle = "white";
+        ctx.textAlign = "left";
+        ctx.fillText("Score: " + score, 10, 30);
+        // Request another frame
+        requestAnimationFrame(loop);
+      }
+
+      // Set up event listeners to handle player movement
+      document.addEventListener("keydown", function (event) {
+        switch (event.keyCode) {
+          case 37: // left arrow
+            controls.left = true;
+            break;
+          case 38: // up arrow
+            controls.up = true;
+            break;
+          case 39: // right arrow
+            controls.right = true;
+            break;
+          case 40: // down arrow
+            controls.down = true;
+
+            break;
+        }
+      });
+      document.addEventListener("keyup", function (event) {
+        switch (event.keyCode) {
+          case 37: // left arrow
+            controls.left = false;
+            break;
+          case 38: // up arrow
+            controls.up = false;
+            break;
+          case 39: // right arrow
+            controls.right = false;
+            break;
+          case 40: // down arrow
+            controls.down = false;
+            break;
+        }
+      });
+
+      // Start the game loop
+      loop();
+    </script>
+  </body>
+</html>
