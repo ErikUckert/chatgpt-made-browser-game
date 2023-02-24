@@ -10,4 +10,4 @@ This game is currently PRE-ALPHA.
 I work on it from time to time, mainly to the the capabilities of chatGPT for programming (& fun).
 
 # How to run
-Just visit [https://erikuckert.github.io/chatgpt-made-browser-game/](the games website) or clone the repository to your local drive and open [game.html](game.html).
+Just visit [https://erikuckert.github.io/chatgpt-made-browser-game](the games website) or clone the repository to your local drive and open [game.html](game.html).
